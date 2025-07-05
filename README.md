@@ -8,8 +8,12 @@ It allows simulating sample paths of Lèvy random field and stochastic heat equa
 Further, it contains functions for computing the convergence rate of the methods either direct or with Monte-Carlo simulations.
 The script are in MATLAB and they generate plots (or videos) with the mentioned results. 
 
+# Content of the repository
+
+TO FILL.
+
 # Requirements
-This code was run under Julia version 1.11, and Python 3.12 with corresponding versions of relevant libraries. In order for the results to be reproducible, the file Manifest.toml contains the exact Julia environment that was used.
+This code was run under MATLAB R2024b.
 
 # Authors and acknowledgment
 This code was created by Annika Lang, Andrea Papini and Verena Schwarz.
