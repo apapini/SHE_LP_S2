@@ -28,7 +28,7 @@ phi = 0 : 2*delta : (2*pi - 2*delta); % azimuth
 %phi = 0 : 2*delta : 2*pi; % azimuth
 [phi,theta] = meshgrid(phi,theta);
 
-time = 1;
+time = 4;
 timesteps = 400;%400;
 h = time/timesteps;
 
