@@ -1,7 +1,12 @@
 
 %% Backward EM
+%% computation of spectral rate for strong, mean and second moment via direct computation.
 
-ExpLP = 0;
+%ExpLP=1, VarLP=1, then Strong Spectral Error;
+%ExpLP=1, VarLP=0, then Mean Spectral Error;
+%ExpLP=0, VarLP=1, then Second Moment Spectral Error;
+
+ExpLP = 1;
 VarLP = 1;
 
 k = 10;
@@ -13,24 +18,29 @@ n = 10;
 strong_error_bEM = zeros(n,length(alpha));  
 
     for k = 1:n
+        k
         m = 2*k;
         h = time/2^m;
         err = zeros(2^k,length(alpha));
         err_intermediate = zeros(2^k,length(alpha));
             for j = 1:2^m
-                err = err + (2*(1:2^k).'+1).*((1:2^k).'+1).^(-alpha) .*...
+                j
+                if ExpLP==0
+                    err = err + (2*(1:2^k).'+1).*((1:2^k).'+1).^(-alpha) .*...
+                        ((1-exp(-2*(1:2^k).'.*((1:2^k).'+1)*h))./(2*(1:2^k).'.*((1:2^k).'+1)).*exp(-2*(1:2^k).'.*((1:2^k).'+1)*h*(2^m-j)) ...
+                        - h./(1+(1:2^k).'.*((1:2^k).'+1)*h).^(2*(2^m-j+1)));
+                    err_intermediate = err_intermediate +  (2*(1:2^k).'+1).*((1:2^k).'+1).^(-alpha) .* ...
+                        ((1-exp(-(1:2^k).'.*((1:2^k).'+1)*h))./((1:2^k).'.*((1:2^k).'+1)).*exp(-(1:2^k).'.*((1:2^k).'+1)*h*(2^m-j))...
+                        - h./(1+(1:2^k).'.*((1:2^k).'+1)*h).^(2^m-j+1));
+                else
+                    err = err + (2*(1:2^k).'+1).*((1:2^k).'+1).^(-alpha) .*...
                        ((1-exp(-2*(1:2^k).'.*((1:2^k).'+1)*h))./(2*(1:2^k).'.*((1:2^k).'+1)).*exp(-2*(1:2^k).'.*((1:2^k).'+1)*h*(2^m-j)) ...
-                       - h./(1+(1:2^k).'.*((1:2^k).'+1)*h).^(2*(2^m-j+1)));
-                err_intermediate = err_intermediate +  (2*(1:2^k).'+1).*((1:2^k).'+1).^(-alpha) .* ...
+                       - 2*(1-exp(-(1:2^k).'.*((1:2^k).'+1)*h))./((1:2^k).'.*((1:2^k).'+1)).*exp(-(1:2^k).'.*((1:2^k).'+1)*h*(2^m-j))./(1+(1:2^k).'.*((1:2^k).'+1)*h).^(2^m-j+1)...
+                       + h./(1+(1:2^k).'.*((1:2^k).'+1)*h).^(2*(2^m-j+1)));
+                    err_intermediate = err_intermediate +  (2*(1:2^k).'+1).*((1:2^k).'+1).^(-alpha) .* ...
                       ((1-exp(-(1:2^k).'.*((1:2^k).'+1)*h))./((1:2^k).'.*((1:2^k).'+1)).*exp(-(1:2^k).'.*((1:2^k).'+1)*h*(2^m-j))...
                         - h./(1+(1:2^k).'.*((1:2^k).'+1)*h).^(2^m-j+1));
-                %err = err + (2*(1:2^k).'+1).*((1:2^k).'+1).^(-alpha) .*...
-                       %((1-exp(-2*(1:2^k).'.*((1:2^k).'+1)*h))./(2*(1:2^k).'.*((1:2^k).'+1)).*exp(-2*(1:2^k).'.*((1:2^k).'+1)*h*(2^m-j)) ...
-                       %- 2*(1-exp(-(1:2^k).'.*((1:2^k).'+1)*h))./((1:2^k).'.*((1:2^k).'+1)).*exp(-(1:2^k).'.*((1:2^k).'+1)*h*(2^m-j))./(1+(1:2^k).'.*((1:2^k).'+1)*h).^(2^m-j+1)...
-                       %+ h./(1+(1:2^k).'.*((1:2^k).'+1)*h).^(2*(2^m-j+1)));
-                %err_intermediate = err_intermediate +  (2*(1:2^k).'+1).*((1:2^k).'+1).^(-alpha) .* ...
-                      %((1-exp(-(1:2^k).'.*((1:2^k).'+1)*h))./((1:2^k).'.*((1:2^k).'+1)).*exp(-(1:2^k).'.*((1:2^k).'+1)*h*(2^m-j))...
-                        %- h./(1+(1:2^k).'.*((1:2^k).'+1)*h).^(2^m-j+1));
+                end;
             end
             if ExpLP==0
                 strong_error_bEM(k,:) = sqrt(sum(err)+ExpLP^2*sum(err_intermediate.^2)).^2;
