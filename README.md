@@ -10,7 +10,30 @@ The script are in MATLAB and they generate plots (or videos) with the mentioned 
 
 # Content of the repository
 
-TO FILL.
+Levy.m containts the function to select the type of noise. We have different (12) noise possibilities explained directly in the file.
+It is needed to have this function in the same folder as the other files.
+Regarding the other files, everything is written in comments inside of each ".m"-file, but as a small rundown here it is what each code does:
+
+<i>Samples_stochastic_heat_equation_and_driving_noise.m </i>
+Generate movies and snapshots of the Levy Random Fields and the Stochastic Heat equation for a specific time, grid, noise and initial condition.
+The movie are created using an exponential transformation on the sphere, i.e. x in S^2 is moved to x*exp(u(x)/|u(x)|), where u is the solution to the equation.
+
+<i>Strong_Mean_SecondMoment_Convergence_Rate_Spectral_SHE_Levy.m</i>
+Compute and generate plot for the convergence rate of the spectral scheme for a reference value of the truncation series.
+In particular using the4 parameter ExpLP, VarLP is it possible to compute the Strong rate (1,1), the Mean rate (1,0) and Second Moment (0,1).
+
+<i>Spectral_Weak_Error_Rate_SHE_Independent_Levy.m</i>
+For a given test function of the form |u(x)|^p where |.| represents the L^2 norm on the sphere, we compute the weak rate of convergence for the spectral method.
+The computation is done using Monte-Carlo sampling (M=20, changable in the file), with a reference solution at fixed time grid and with different truncation parameters.
+PorAselector is a variable that can swwitch between observing the decay for different test function (i.e. different p, select the variable to 0) and observing the decay for a fixed test fanction (with selected p) respect to the regolarity of the field (i.e. different alpha, select the variable to 1).
+
+<i>StrongSpectralError_ForwardEM_BackwardEM_Direct.m</i>
+Compute the strong error (mean and second moment) for the Euler-Maruyama scheme, using direct computation for the mean and variance and with both the forward and backward scheme.
+The scheme are sequenced, so for each run 3 plots will be shown: Strong Spectral Error, Forward EM Strong Error, Backward EM Strong Error.
+
+<i>StrongSpectralError_MonteCarloForwardEM_MonteCarloBackwardEM.m</i>
+Compute the strong error (mean and second moment) for the Euler-Maruyama scheme, using Monte-Carlo sampling for the mean and variance and with both the forward and backward scheme.
+The scheme are sequenced, so for each run 3 plots will be shown: Strong Spectral Error, Forward EM Strong Error, Backward EM Strong Error.
 
 # Requirements
 This code was run under MATLAB R2024b.
