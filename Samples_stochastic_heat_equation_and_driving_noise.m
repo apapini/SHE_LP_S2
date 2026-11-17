@@ -1,67 +1,82 @@
 %% Simulation of samples of the stochastic heat equation and the underlying noise
+%% using the same samples of a Brownian motion and a compensated Poisson Process
+%% for the samples of the Levy noise as sum of them
+%
+% Simulation of multiple samples of different kinds of Levy processes on the
+% sphere and the solution of the stochastic heat equation using these
+% samples
+%
+% The Levy process is defined as a series expansion with respect to the
+% real-valued spherical harmonics Y_{l,m}, where the components are
+% identically distributed real-valued Levy processe generated as a Wiener 
+% process, a compensated Poisson process or the sum of the previous two, 
+% each multiplied by the index l to the power of half the decay rate.
+%
+% plot code by Denise L. Chen  9-1-93.
+% in Template "Spherical Surface Harmonic"
+% 
+% For the plots in the paper the third sample was used.
 
-%set seed
-%randn('state',112); 
-rng('default')
+% set seed 
 rng(112);
 
-% Define the truncation of the harmonic series.
+% define the truncation of the harmonic series.
 degree = 2^7;
 
-% Create the grid
+% create the grid
 delta = pi/480; 
 theta = 0 : delta : pi; % altitude
 phi = 0 : 2*delta : (2*pi - 2*delta); % azimuth
 [phi,theta] = meshgrid(phi,theta);
 
+% time window, step and increments
 time = 0.1;
 timesteps = 200; 
 h = time/timesteps;
 
-% Define the angular power spectrum
-% which defines the covariance.
+% define the decay rate alpha
 decay = 3; % strictly larger than 2
 Cl = ((0:degree)+1).^(-decay);
 sqCl = sqrt(2*Cl);
 
-
+% jump intensity parameter
 lambda = 1;
 
-% To simulate the different samples, in the paper the third sample is used
+% to simulate the different samples, in the paper the third sample is used
 for i = 1:3 
 
     % increments of the stochastic heat equation on the surface
-    %driven by Wiener process + Poisson process
+    % driven by Wiener process + compensated Poisson process
     TL = ones(size(phi,2),size(theta,1));
-    %driven by Wiener process
+    % driven by Wiener process
     TB = ones(size(phi,2),size(theta,1));
-    %driven by Poisson process
+    % driven by compensated Poisson process
     TP = ones(size(phi,2),size(theta,1));
 
     % solution of the stochastic heat equation
-    %driven by Wiener process + Poisson process
+    % driven by Wiener process + compensated Poisson process
     solL = zeros(size(TL,1),size(TL,2),(timesteps+1));
-    %driven by Wiener process
+    % driven by Wiener process
     solB = zeros(size(TB,1),size(TB,2),(timesteps+1));
-    %driven by Poisson process
+    % driven by compensated Poisson process
     solP = zeros(size(TP,1),size(TP,2),(timesteps+1));
 
     % noise processes
-    %Wiener process + Poisson process
+    % Wiener process + compensated Poisson process
     npL = zeros(size(TL,1),size(TL,2),(timesteps+1));
-    %Wiener process
+    % Wiener process
     npB = zeros(size(TB,1),size(TB,2),(timesteps+1));
-    %Poisson process
+    % compensated Poisson process
     npP = zeros(size(TP,1),size(TP,2),(timesteps+1));
 
     solL(:,:,1) = solL(:,:,1) + TL;
     solB(:,:,1) = solB(:,:,1) + TB;
     solP(:,:,1) = solP(:,:,1) + TP;
 
-    % Sum over all spherical harmonics up to order degree
+    % sum over all spherical harmonics up to order degree
     for l = degree:-1:0 
         
-        % Generate generalized Legendre polynomials
+        % generate generalized Legendre polynomials
         % of degree l and scale them
         Plm = legendre(l,cos(theta(:,1)),'norm');
         scal = (1).^(0:1:l)*sqrt(1/pi);
@@ -69,48 +84,47 @@ for i = 1:3
 
         Llm = Plm.*(ones(size(theta,1),1)*scal)';
         
-        %Generate rough random field for initial value
-        
+        % generate rough random field for initial value
         RF = zeros(l+1,size(phi,2));
         RF(1,:) = (randn(1)*ones(1,size(phi,2)));
         if l >0
             RF(2:end,:) = (randn(l,1)*ones(1,size(phi,2))).*cos((1:1:l)'*phi(1,:)) +...
                 (randn(l,1)*ones(1,size(phi,2))).*sin((1:1:l)'*phi(1,:));
         end
-        beta = 2; %roughness of initial condition
+        beta = 2; % roughness of initial condition
 
-        TL = (RF'*Llm)*(l+1)^(-beta/2)*1; %last number to scale noise
-        TB = (RF'*Llm)*(l+1)^(-beta/2)*1; %last number to scale noise
-        TP = (RF'*Llm)*(l+1)^(-beta/2)*1; %last number to scale noise
+        TL = (RF'*Llm)*(l+1)^(-beta/2)*1; % last factor to scale noise
+        TB = (RF'*Llm)*(l+1)^(-beta/2)*1; % last factor to scale noise
+        TP = (RF'*Llm)*(l+1)^(-beta/2)*1; % last factor to scale noise
     
         solL(:,:,1) = solL(:,:,1) + TL;
         solB(:,:,1) = solB(:,:,1) + TB;
         solP(:,:,1) = solP(:,:,1) + TP;
         
-        %Iteration over all time steps
+        % iteration over all time steps
         for t=1:timesteps
 
             % generation of the noise increment
-            %Generate random fields
+            % generate random fields
 
             numberRV =2*l+1;
 
-            %Samples for the Wiener process
+            % samples for the Wiener process
             BM = sqrt(h)*randn(numberRV,1);
-            %Samples for the Poisson process
+            % samples for the compensated Poisson process
             PP = poissrnd(lambda*h,numberRV,1)-lambda*h;
-            %Samples for Wiener process + Poisson process
+            % samples for Wiener process + compensated Poisson process
             LP = BM+PP;
 
-            %Initialize random fields
-            %Wiener process + Poisson process
+            % initialize random fields
+            % Wiener process + compensated Poisson process
             LRF = zeros(l+1,size(phi,2));
-            %Wiener process
+            % Wiener process
             BRF = zeros(l+1,size(phi,2));
-            %Poisson process
+            % compensated Poisson process
             PRF = zeros(l+1,size(phi,2));
 
-            %Use samples to generate time increment of random fields
+            % use samples to generate time increment of random fields
             LRF(1,:) = (LP(1)*ones(1,size(phi,2)));
             BRF(1,:) = (BM(1)*ones(1,size(phi,2)));
             PRF(1,:) = (PP(1)*ones(1,size(phi,2)));
@@ -136,12 +150,12 @@ for i = 1:3
                 TP = (TP+  (LRF'*Llm) *sqCl(l+1))*(1+l*(l+1)*h).^(-1);
             end
 
-            %Add simulated values to solution process of the heat equation
+            % add simulated values to solution process of the heat equation
             solL(:,:,t+1) = solL(:,:,t+1) + TL;
             solB(:,:,t+1) = solB(:,:,t+1) + TB;
             solP(:,:,t+1) = solP(:,:,t+1) + TP;
             
-            %Add simulated values to the increment process of the
+            % add simulated values to the increment process of the
             %stochastic noise
             npL(:,:,t+1) = npL(:,:,t+1) + (LRF'*Llm)*sqCl(l+1);
             npB(:,:,t+1) = npB(:,:,t+1) + (BRF'*Llm)*sqCl(l+1);
@@ -154,16 +168,16 @@ for i = 1:3
         
     end
     
-    %Transform increment of noise to noise process
+    % transform increment of noise to noise process
     for t = 2:timesteps
         npL(:,:,t+1) = npL(:,:,t) + npL(:,:,t+1);
         npB(:,:,t+1) = npB(:,:,t) + npB(:,:,t+1);
         npP(:,:,t+1) = npP(:,:,t) + npP(:,:,t+1);
     end
     
-    %Create pictures and videos for the noise and the heat equation
+    % create pictures and videos for the noise and the heat equation
 
-    %Heat equation driven by Brownian motion
+    % heat equation driven by Brownian motion
     videoname2 = strcat('Num',string(i),'SHEBM'); 
     vidobj2 = VideoWriter(videoname2);
     vidobj2.FrameRate = 10;
@@ -190,7 +204,7 @@ for i = 1:3
         view(40,30)
         camzoom(1.4)
         
-        %save as video and store pictures of the interessting time points
+        % save as video and store pictures of the interessting time points
         writeVideo(vidobj2, getframe(gcf))  
         if t==1
             set(gcf,'PaperUnits','inches','PaperPosition',[0 0 7 7])
@@ -220,7 +234,7 @@ for i = 1:3
     end
     close(vidobj2)
    
-    %Brownian motion
+    % Brownian motion
     videoname3 = strcat('Num',string(i),'BM'); % enter the name as a text string
     vidobj3 = VideoWriter(videoname3);
     vidobj3.FrameRate = 10;
@@ -231,7 +245,7 @@ for i = 1:3
     npB = npB/max(abs(min(min(min(npB)))), abs(max(max(max(npB)))));
     
     for t = 1 : timesteps+1
-        %create a picture for every time step
+        % create a picture for every time step
         
         rho = exp([npB(:,:,t);npB(1,:,t)]');
         r = rho.*sin([theta theta(:,1)]);
@@ -247,7 +261,7 @@ for i = 1:3
         view(40,30)
         camzoom(1.4)
         
-        %save as video and store pictures of the interessting time points
+        % save as video and store pictures of the interessting time points
         writeVideo(vidobj3, getframe(gcf))  
         if t==1
             set(gcf,'PaperUnits','inches','PaperPosition',[0 0 7 7])
@@ -277,9 +291,9 @@ for i = 1:3
     end
     close(vidobj3)
 
-    %Heat equation driven by Poisson process
+    % Heat equation driven by compensated Poisson process
     
-    videoname4 = strcat('Num',string(i),'SHEPP'); % enter the name as a text string
+    videoname4 = strcat('Num',string(i),'SHEPP'); 
     vidobj4 = VideoWriter(videoname4);
     vidobj4.FrameRate = 10;
     open(vidobj4)
@@ -289,7 +303,7 @@ for i = 1:3
     solP = solP/max(abs(min(min(min(solP)))), abs(max(max(max(solP)))));
     
     for t = 1 : timesteps+1
-        %create a picture for every time step
+        % create a picture for every time step
         rho = exp([solP(:,:,t);solP(1,:,t)]');
         r = rho.*sin([theta theta(:,1)]);
         x = r.*cos([phi 2*pi*ones(size(phi,1),1)]);
@@ -304,7 +318,7 @@ for i = 1:3
         view(40,30)
         camzoom(1.4)
         
-        %save as video and store pictures of the interessting time points
+        % save as video and store pictures of the interessting time points
         writeVideo(vidobj4, getframe(gcf))  
         if t==1
             set(gcf,'PaperUnits','inches','PaperPosition',[0 0 7 7])
@@ -334,9 +348,9 @@ for i = 1:3
     end
     close(vidobj4)
 
-    %Poisson process
+    % compensated Poisson process
     
-    videoname5 = strcat('Num',string(i),'PP'); % enter the name as a text string
+    videoname5 = strcat('Num',string(i),'PP'); 
     vidobj5 = VideoWriter(videoname5);
     vidobj5.FrameRate = 10;
     open(vidobj5)
@@ -346,7 +360,7 @@ for i = 1:3
     npP = npP/max(abs(min(min(min(npP)))), abs(max(max(max(npP)))));
     
     for t = 1 : timesteps+1
-        %create a picture for every time step
+        % create a picture for every time step
         rho = exp([npP(:,:,t);npP(1,:,t)]');
         r = rho.*sin([theta theta(:,1)]);
         x = r.*cos([phi 2*pi*ones(size(phi,1),1)]);
@@ -361,7 +375,7 @@ for i = 1:3
         view(40,30)
         camzoom(1.4)
         
-        %save as video and store pictures of the interessting time points
+        % save as video and store pictures of the interessting time points
         writeVideo(vidobj5, getframe(gcf))  
         if t==1
             set(gcf,'PaperUnits','inches','PaperPosition',[0 0 7 7])
@@ -392,9 +406,9 @@ for i = 1:3
     close(vidobj5)
 
 
-    %Heat equation driven by Brownian motion + Poisson process
+    % Heat equation driven by Brownian motion + compensated Poisson process
     
-    videoname6 = strcat('Num',string(i),'SHELP'); % enter the name as a text string
+    videoname6 = strcat('Num',string(i),'SHELP'); 
     vidobj6 = VideoWriter(videoname6);
     vidobj6.FrameRate = 10;
     open(vidobj6)
@@ -404,7 +418,7 @@ for i = 1:3
     solL = solL/max(abs(min(min(min(solL)))), abs(max(max(max(solL)))));
     
     for t = 1 : timesteps+1
-        %create a picture for every time step
+        % create a picture for every time step
         rho = exp([solL(:,:,t);solL(1,:,t)]');
         r = rho.*sin([theta theta(:,1)]);
         x = r.*cos([phi 2*pi*ones(size(phi,1),1)]);
@@ -419,7 +433,7 @@ for i = 1:3
         view(40,30)
         camzoom(1.4)
         
-        %save as video and store pictures of the interessting time points
+        % save as video and store pictures of the interessting time points
         writeVideo(vidobj6, getframe(gcf))  
         if t==1
             set(gcf,'PaperUnits','inches','PaperPosition',[0 0 7 7])
@@ -449,9 +463,9 @@ for i = 1:3
     end
     close(vidobj6)
     
-    %Wiener process + Poisson process
+    % Wiener process + compensated Poisson process
     
-    videoname7 = strcat('Num',string(i),'LP'); % enter the name as a text string
+    videoname7 = strcat('Num',string(i),'LP');
     vidobj7 = VideoWriter(videoname7);
     vidobj7.FrameRate = 10;
     open(vidobj7)
@@ -461,12 +475,12 @@ for i = 1:3
     npL = npL/max(abs(min(min(min(npL)))), abs(max(max(max(npL)))));
     
     for t = 1 : timesteps+1
-        %create a picture for every time step
+        % create a picture for every time step
         rho = exp([npL(:,:,t);npL(1,:,t)]');
         r = rho.*sin([theta theta(:,1)]);
         x = r.*cos([phi 2*pi*ones(size(phi,1),1)]);
         y = r.*sin([phi 2*pi*ones(size(phi,1),1)]);
-         z = rho.*cos([theta theta(:,1)]);
+        z = rho.*cos([theta theta(:,1)]);
        
         clf
         surf(x,y,z,'EdgeColor','none')
@@ -476,7 +490,7 @@ for i = 1:3
         view(40,30)
         camzoom(1.4)
         
-        %save as video and store pictures of the interessting time points
+        % save as video and store pictures of the interessting time points
         writeVideo(vidobj7, getframe(gcf))  
         if t==1
             set(gcf,'PaperUnits','inches','PaperPosition',[0 0 7 7])
@@ -504,6 +518,6 @@ for i = 1:3
             print('-depsc', fOut, '-r100')
         end
     end
-    close(vidobj3)
+    close(vidobj7)
 
 end
